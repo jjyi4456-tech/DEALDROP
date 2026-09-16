@@ -1,0 +1,78 @@
+{
+  "name": "MerchantBillingConfig",
+  "type": "object",
+  "properties": {
+    "merchant_id": {
+      "type": "string"
+    },
+    "merchant_name": {
+      "type": "string"
+    },
+    "merchant_owner_id": {
+      "type": "string"
+    },
+    "default_commission_rate": {
+      "type": "number",
+      "default": 5
+    },
+    "voucher_rate": {
+      "type": "number",
+      "default": 10
+    },
+    "custom_rates": {
+      "type": "object"
+    },
+    "payment_terms": {
+      "type": "string",
+      "enum": [
+        "monthly_invoice",
+        "deduct_from_balance",
+        "direct_split"
+      ],
+      "default": "monthly_invoice"
+    },
+    "wallet_balance": {
+      "type": "number",
+      "default": 0
+    },
+    "bank_account": {
+      "type": "object"
+    },
+    "is_commission_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "merchant_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.merchant_owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

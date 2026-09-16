@@ -1,0 +1,82 @@
+{
+  "name": "GlobalGoal",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "target_count": {
+      "type": "number",
+      "default": 100
+    },
+    "current_count": {
+      "type": "number",
+      "default": 0
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "completed",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "mega_reward_title": {
+      "type": "string"
+    },
+    "mega_reward_type": {
+      "type": "string",
+      "enum": [
+        "percent",
+        "cash",
+        "menu"
+      ]
+    },
+    "mega_reward_value": {
+      "type": "string"
+    },
+    "completed_date": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "target_count",
+    "start_date",
+    "end_date",
+    "mega_reward_title",
+    "mega_reward_type",
+    "mega_reward_value"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

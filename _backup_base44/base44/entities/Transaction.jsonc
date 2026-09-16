@@ -1,0 +1,117 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "dine_in_bill",
+        "voucher_purchase",
+        "quest_boost",
+        "season_pass",
+        "addon_push"
+      ]
+    },
+    "merchant_id": {
+      "type": "string"
+    },
+    "merchant_name": {
+      "type": "string"
+    },
+    "merchant_owner_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "gross_amount": {
+      "type": "number"
+    },
+    "platform_rate": {
+      "type": "number",
+      "default": 5
+    },
+    "platform_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "gateway_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "net_merchant_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "settled",
+        "rejected",
+        "refunded"
+      ],
+      "default": "pending"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "receipt_image_url": {
+      "type": "string"
+    },
+    "ai_verification_data": {
+      "type": "object"
+    },
+    "receipt_hash": {
+      "type": "string"
+    },
+    "bill_number": {
+      "type": "string"
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "settlement_batch_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "gross_amount"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.merchant_owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

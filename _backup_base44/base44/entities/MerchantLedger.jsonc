@@ -1,0 +1,85 @@
+{
+  "name": "MerchantLedger",
+  "type": "object",
+  "properties": {
+    "merchant_id": {
+      "type": "string"
+    },
+    "merchant_name": {
+      "type": "string"
+    },
+    "merchant_owner_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "commission_deduct",
+        "topup",
+        "refund",
+        "boost_fee",
+        "bonus"
+      ],
+      "default": "commission_deduct"
+    },
+    "amount": {
+      "type": "number",
+      "default": 0
+    },
+    "balance_after": {
+      "type": "number",
+      "default": 0
+    },
+    "coupon_id": {
+      "type": "string"
+    },
+    "bill_amount": {
+      "type": "number"
+    },
+    "discount_amount": {
+      "type": "number"
+    },
+    "final_customer_paid": {
+      "type": "number"
+    },
+    "story_shared": {
+      "type": "boolean",
+      "default": false
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "merchant_id",
+    "type",
+    "amount"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.merchant_owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

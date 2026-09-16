@@ -1,0 +1,59 @@
+{
+  "name": "SecurityAuditLog",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "merchant_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "token_rejected",
+        "token_reused",
+        "geofence_rejected",
+        "gps_rejected",
+        "rate_limited",
+        "merchant_rejected",
+        "quest_rejected",
+        "checkin_approved"
+      ],
+      "default": "checkin_approved"
+    },
+    "reason_code": {
+      "type": "string"
+    },
+    "details": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "event_type",
+    "reason_code"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

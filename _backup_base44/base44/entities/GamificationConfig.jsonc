@@ -1,0 +1,47 @@
+{
+  "name": "GamificationConfig",
+  "type": "object",
+  "properties": {
+    "xp_multiplier": {
+      "type": "number",
+      "default": 1
+    },
+    "double_xp_active": {
+      "type": "boolean",
+      "default": false
+    },
+    "leaderboard_cycle": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "monthly"
+      ],
+      "default": "weekly"
+    },
+    "last_reset_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "xp_multiplier"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

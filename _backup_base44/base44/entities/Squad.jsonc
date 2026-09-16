@@ -1,0 +1,92 @@
+{
+  "name": "Squad",
+  "type": "object",
+  "properties": {
+    "quest_id": {
+      "type": "string"
+    },
+    "merchant_id": {
+      "type": "string"
+    },
+    "merchant_name": {
+      "type": "string"
+    },
+    "leader_id": {
+      "type": "string"
+    },
+    "leader_name": {
+      "type": "string"
+    },
+    "squad_code": {
+      "type": "string"
+    },
+    "required_count": {
+      "type": "number",
+      "default": 4
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "member_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checked_in": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recruiting",
+        "ready",
+        "completed",
+        "expired"
+      ],
+      "default": "recruiting"
+    },
+    "reward_title": {
+      "type": "string"
+    },
+    "reward_type": {
+      "type": "string",
+      "enum": [
+        "percent",
+        "cash",
+        "menu"
+      ]
+    },
+    "reward_value": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "quest_id",
+    "merchant_id",
+    "squad_code",
+    "required_count"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+// Shared Suspense fallback shown while a lazily-loaded route chunk downloads.
+export default function PageFallback() {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+}

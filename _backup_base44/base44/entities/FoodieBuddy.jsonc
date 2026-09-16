@@ -1,0 +1,69 @@
+{
+  "name": "FoodieBuddy",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "pet_name": {
+      "type": "string"
+    },
+    "pet_type": {
+      "type": "string",
+      "default": "fox"
+    },
+    "hunger_level": {
+      "type": "number",
+      "default": 80
+    },
+    "happiness": {
+      "type": "number",
+      "default": 80
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "pet_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "name": "Quest",
+  "type": "object",
+  "properties": {
+    "merchant_id": {
+      "type": "string"
+    },
+    "merchant_name": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "reward_type": {
+      "type": "string",
+      "enum": [
+        "percent",
+        "cash",
+        "menu"
+      ]
+    },
+    "reward_value": {
+      "type": "string"
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "quest_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "capacity": {
+      "type": "number",
+      "default": 10
+    },
+    "participants": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "expired",
+        "draft"
+      ],
+      "default": "active"
+    },
+    "xp_reward": {
+      "type": "number",
+      "default": 50
+    },
+    "squad_size": {
+      "type": "number",
+      "default": 0
+    },
+    "is_flash": {
+      "type": "boolean",
+      "default": false
+    },
+    "expires_at": {
+      "type": "string"
+    },
+    "flash_badge": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "reward_type",
+    "reward_value"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "merchant"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": null,
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

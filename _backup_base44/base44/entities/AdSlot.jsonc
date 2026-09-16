@@ -1,0 +1,58 @@
+{
+  "name": "AdSlot",
+  "type": "object",
+  "properties": {
+    "slot_name": {
+      "type": "string"
+    },
+    "position": {
+      "type": "string",
+      "enum": [
+        "top_banner",
+        "home_carousel"
+      ]
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "basic",
+        "premium"
+      ]
+    },
+    "price": {
+      "type": "number"
+    },
+    "duration_days": {
+      "type": "number",
+      "default": 3
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "slot_name",
+    "position",
+    "tier",
+    "price"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

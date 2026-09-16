@@ -1,0 +1,102 @@
+{
+  "name": "SubscriptionPlan",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "enum": [
+        "starter",
+        "growth",
+        "premium"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "quest_quota": {
+      "type": "number",
+      "default": 30
+    },
+    "quest_unlimited": {
+      "type": "boolean",
+      "default": false
+    },
+    "geofence_radius": {
+      "type": "number",
+      "default": 50
+    },
+    "push_quota": {
+      "type": "number",
+      "default": 0
+    },
+    "banner_days": {
+      "type": "number",
+      "default": 0
+    },
+    "foodie_buddy": {
+      "type": "boolean",
+      "default": false
+    },
+    "data_export": {
+      "type": "boolean",
+      "default": false
+    },
+    "multi_geofence": {
+      "type": "boolean",
+      "default": false
+    },
+    "color": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "stripe_price_id": {
+      "type": "string"
+    },
+    "discounted_commission_rate": {
+      "type": "number",
+      "default": 0.03
+    },
+    "boost_credits_per_month": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "code",
+    "name",
+    "price"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

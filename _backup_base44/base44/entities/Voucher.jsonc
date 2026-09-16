@@ -1,0 +1,84 @@
+{
+  "name": "Voucher",
+  "type": "object",
+  "properties": {
+    "merchant_id": {
+      "type": "string"
+    },
+    "merchant_name": {
+      "type": "string"
+    },
+    "merchant_owner_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "original_value": {
+      "type": "number"
+    },
+    "take_rate": {
+      "type": "number",
+      "default": 10
+    },
+    "stock": {
+      "type": "number",
+      "default": 0
+    },
+    "sold": {
+      "type": "number",
+      "default": 0
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "soldout",
+        "expired"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "merchant_id",
+    "title",
+    "price"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
