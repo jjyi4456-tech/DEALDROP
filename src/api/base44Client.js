@@ -184,6 +184,14 @@ const functionsAdapter = {
       const { verifyReceiptAI } = await import('@/lib/receiptVerification');
       return verifyReceiptAI(payload);
     }
+    if (functionName === 'completeTableOrder') {
+      const { completeTableOrderDirect } = await import('@/lib/tableOrderSettlement');
+      return completeTableOrderDirect(payload);
+    }
+    if (functionName === 'redeemCouponWithBill') {
+      const { redeemCouponWithBillDirect } = await import('@/lib/couponRedemption');
+      return redeemCouponWithBillDirect(payload);
+    }
     const { data, error } = await supabase.functions.invoke(functionName, { body: payload });
     if (error) {
       console.warn(`[Supabase Function] ${functionName} error:`, error);
