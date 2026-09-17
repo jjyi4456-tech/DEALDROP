@@ -169,17 +169,56 @@ export default function MerchantProfile() {
         </div>
 
         {/* Location */}
-        <div className="space-y-1.5">
-          <Label>พิกัดและที่อยู่</Label>
-          <Input value={form.address || ""} onChange={set("address")} placeholder="ที่อยู่ร้าน" />
-          <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={pinLocation} disabled={pinning} className="border-primary text-primary hover:bg-primary/10">
-              {pinning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
-              ปักหมุด GPS ใหม่
-            </Button>
-            {form.lat != null && form.lng != null && (
-              <span className="text-xs text-muted-foreground">{form.lat.toFixed(4)}, {form.lng.toFixed(4)}</span>
-            )}
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="mp-address">ที่อยู่ร้าน</Label>
+            <Input id="mp-address" value={form.address || ""} onChange={set("address")} placeholder="ระบุเลขที่ ซอย ถนน ตำบล อำเภอ จังหวัด" />
+          </div>
+
+          <div className="rounded-xl border bg-muted/30 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold flex items-center gap-1.5">
+                <MapPin className="h-4 w-4 text-primary" /> พิกัดร้าน (ละติจูด, ลองจิจูด)
+              </Label>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={pinLocation} 
+                disabled={pinning} 
+                className="h-8 border-primary/40 text-primary hover:bg-primary/10 text-xs"
+              >
+                {pinning ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <MapPin className="mr-1.5 h-3.5 w-3.5" />}
+                ดึงพิกัดจาก GPS ปัจจุบัน
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground font-medium">Latitude (ละติจูด)</span>
+                <Input 
+                  type="number" 
+                  step="any"
+                  placeholder="เช่น 13.7563" 
+                  value={form.lat ?? ""} 
+                  onChange={(e) => setForm((f) => ({ ...f, lat: e.target.value === "" ? null : parseFloat(e.target.value) }))} 
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground font-medium">Longitude (ลองจิจูด)</span>
+                <Input 
+                  type="number" 
+                  step="any"
+                  placeholder="เช่น 100.5018" 
+                  value={form.lng ?? ""} 
+                  onChange={(e) => setForm((f) => ({ ...f, lng: e.target.value === "" ? null : parseFloat(e.target.value) }))} 
+                />
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              💡 คุณสามารถกรอกตัวเลขพิกัดจาก Google Maps โดยตรง หรือกดปุ่ม &quot;ดึงพิกัดจาก GPS ปัจจุบัน&quot; เพื่อความแม่นยำในการเช็คอินของลูกค้า
+            </p>
           </div>
         </div>
       </div>
