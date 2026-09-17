@@ -26,11 +26,19 @@ export default function CouponQrModal({ coupon, onClose }) {
     <Dialog open={!!coupon} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-sm rounded-2xl text-center">
         <DialogHeader>
-          <DialogTitle className="text-lg font-extrabold leading-snug">{coupon.title}</DialogTitle>
+          <DialogTitle className="text-lg font-extrabold leading-snug">
+            {coupon.coupon_type === "rescue_deal" ? "🚨 บัตรรับเมนูกู้ชีพ (Rescue Deal)" : coupon.title}
+          </DialogTitle>
           <DialogDescription>
-            🏪 {coupon.merchant_name} · {rewardLabel[coupon.reward_type]} {coupon.reward_value}
+            🏪 {coupon.merchant_name} · {coupon.coupon_type === "rescue_deal" ? coupon.title : `${rewardLabel[coupon.reward_type] || "สิทธิ์"} ${coupon.reward_value}`}
           </DialogDescription>
         </DialogHeader>
+
+        {coupon.coupon_type === "rescue_deal" && (
+          <div className="mx-auto mb-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+            🌱 รับ Eco-XP x2 (+100 XP) เมื่อสแกนรับของที่หน้าร้าน
+          </div>
+        )}
 
         <div className={`mx-auto w-56 rounded-2xl border bg-white p-3 shadow-sm ${used || expired ? "opacity-40 grayscale" : ""}`}>
           {qrUrl ? (

@@ -8,10 +8,12 @@ import FlashSurgeCard from "@/components/merchant/FlashSurgeCard";
 import StoryBoostStatCard from "@/components/merchant/StoryBoostStatCard";
 import RepeatRetentionCard from "@/components/merchant/RepeatRetentionCard";
 import QuickActions from "@/components/merchant/QuickActions";
+import MerchantRescueDealsSection from "@/components/merchant/MerchantRescueDealsSection";
 
 export default function MerchantDashboard() {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rescueRefreshKey, setRescueRefreshKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -42,7 +44,9 @@ export default function MerchantDashboard() {
         </div>
       </div>
 
-      <QuickActions />
+      <QuickActions onRescueCreated={() => setRescueRefreshKey((k) => k + 1)} />
+
+      <MerchantRescueDealsSection refreshTrigger={rescueRefreshKey} />
 
       <div className="mb-6">
         <FlashSurgeCard />

@@ -97,6 +97,46 @@ export default function QrScanner() {
     }
   };
 
+  const confirmRescueRedeem = async () => {
+    if (!coupon || coupon.coupon_type !== "rescue_deal") return;
+    setProcessing(true);
+    try {
+      // 1. Mark coupon as used
+      const todayIso = new Date().toISOString().slice(0, 10);
+      await base44.entities.Coupon.update(coupon.id, {
+        status: "used",
+        redeemed_date: todayIso,
+      });
+
+      // 2. Award Eco-XP x2 (+100 XP) to user
+      if (coupon.user_id) {
+        const targetUser = await base44.entities.User.get(coupon.user_id).catch(() => null);
+        if (targetUser) {
+          await base44.entities.User.update(coupon.user_id, {
+            xp: (Number(targetUser.xp) || 0) + 100,
+            total_checkins: (Number(targetUser.total_checkins) || 0) + 1,
+          });
+        }
+      }
+
+      setReceipt({
+        rescue_deal: true,
+        item_title: coupon.title,
+        customer: customerName || "สมาชิกกู้โลก",
+        date: todayIso,
+      });
+      setCoupon(null);
+      toast({
+        title: "🌿 สแกนส่งมอบเมนูกู้ชีพสำเร็จ!",
+        description: `ลูกค้าได้รับ Eco-XP x2 (+100 XP) และตัดสิทธิ์ในระบบเรียบร้อยแล้ว`,
+      });
+    } catch (e) {
+      toast({ title: "เกิดข้อผิดพลาด", description: e.message, variant: "destructive" });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const confirmRedeem = async () => {
     const billAmount = Number(bill);
     if (!coupon || !Number.isFinite(billAmount) || billAmount <= 0) return;
@@ -192,25 +232,63 @@ export default function QrScanner() {
           </div>
         )}
 
-        {/* Step 2: bill entry + live breakdown */}
+        {/* Step 2: bill entry or direct rescue deal redemption */}
         {coupon && (
           <div className="mt-4 rounded-2xl border bg-card p-5 shadow-sm">
-            <p className="text-sm font-semibold">คูปอง: {coupon.title}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              ลูกค้า: {customerName || "สมาชิก DEALDROP"} · ส่วนลด{" "}
-              {coupon.reward_type === "percent" ? `${coupon.reward_value}%` : coupon.reward_type === "cash" ? `${fmtBaht(Number(coupon.reward_value))}` : `แถม ${coupon.reward_value}`}
-            </p>
+            {coupon.coupon_type === "rescue_deal" ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-red-600 font-extrabold text-base">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                    🚨
+                  </span>
+                  ดีลกู้ชีพอาหารเคลียร์สต็อก (Rescue Deal)
+                </div>
+                <div className="rounded-2xl border bg-muted/40 p-4 space-y-2 text-left">
+                  <p className="font-extrabold text-foreground text-base">{coupon.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    ลูกค้า: <span className="font-bold text-foreground">{customerName || "สมาชิกกู้โลก"}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    รหัสจอง: <span className="font-mono font-bold text-foreground">{coupon.qr_code}</span>
+                  </p>
+                  <div className="mt-2 pt-2 border-t flex items-center justify-between text-xs text-emerald-700 font-bold">
+                    <span>🌱 รางวัลภารกิจ:</span>
+                    <span>Eco-XP x2 (+100 XP)</span>
+                  </div>
+                </div>
 
-            <label className="mt-4 block text-xs font-medium text-muted-foreground">ยอดบิลรวมทั้งหมด (฿)</label>
-            <Input
-              type="number"
-              min="0"
-              inputMode="decimal"
-              value={bill}
-              onChange={(e) => setBill(e.target.value)}
-              placeholder="เช่น 450"
-              className="mt-1 h-14 text-center text-2xl font-bold"
-            />
+                <p className="text-xs text-muted-foreground">
+                  ตรวจสอบสินค้าและส่งมอบอาหารให้ลูกค้า จากนั้นกดยืนยันส่งมอบเพื่อตัดสิทธิ์และมอบ Eco-XP x2
+                </p>
+
+                <button
+                  type="button"
+                  onClick={confirmRescueRedeem}
+                  disabled={processing}
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-600 to-orange-500 py-4 text-base font-extrabold text-white shadow-lg transition active:scale-95 disabled:opacity-50"
+                >
+                  {processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
+                  {processing ? "กำลังส่งมอบ..." : "ยืนยันส่งมอบเมนูกู้ชีพ"}
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm font-semibold">คูปอง: {coupon.title}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  ลูกค้า: {customerName || "สมาชิก DEALDROP"} · ส่วนลด{" "}
+                  {coupon.reward_type === "percent" ? `${coupon.reward_value}%` : coupon.reward_type === "cash" ? `${fmtBaht(Number(coupon.reward_value))}` : `แถม ${coupon.reward_value}`}
+                </p>
+
+                <label className="mt-4 block text-xs font-medium text-muted-foreground">ยอดบิลรวมทั้งหมด (฿)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  inputMode="decimal"
+                  value={bill}
+                  onChange={(e) => setBill(e.target.value)}
+                  placeholder="เช่น 450"
+                  className="mt-1 h-14 text-center text-2xl font-bold"
+                />
 
             {/* 📸 Story Boost: cashier ticks when the customer shows a story tagging the shop */}
             {merchant?.story_boost_enabled && (
@@ -270,6 +348,8 @@ export default function QrScanner() {
               {processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
               {processing ? "กำลังตัดบิล..." : "ยืนยันปิดบิลและใช้สิทธิ์"}
             </button>
+            </>
+          )}
           </div>
         )}
 
@@ -278,18 +358,33 @@ export default function QrScanner() {
           <DialogContent className="max-w-sm rounded-2xl border-emerald-200 bg-emerald-50">
             <div className="flex flex-col items-center text-center">
               <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-              <p className="mt-2 text-xl font-bold text-emerald-700">ปิดบิลสำเร็จ ✓</p>
-              <div className="mt-4 w-full space-y-1.5 rounded-xl bg-white/80 p-4 text-left text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">ยอดบิล</span><span>{fmtBaht(receipt?.bill_amount)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">ส่วนลดคูปอง</span><span className="text-emerald-600">-{fmtBaht(receipt?.discount_amount)}</span></div>
-                {receipt?.story_bonus > 0 && (
-                  <div className="flex justify-between"><span className="text-muted-foreground">📸 โบนัสแชร์สตอรี่</span><span className="text-fuchsia-600">-{fmtBaht(receipt?.story_bonus)}</span></div>
-                )}
-                <div className="flex justify-between font-bold"><span>ยอดสุทธิที่เรียกเก็บ</span><span>{fmtBaht(receipt?.final_paid_amount)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">ค่าคอมมิชชันที่หัก ({pct(receipt?.commission_rate)}{receipt?.pro_applied ? " · Pro" : ""})</span><span className="text-primary">-{fmtBaht(receipt?.commission_fee)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">เครดิตคงเหลือ</span><span className="font-semibold">{fmtBaht(receipt?.balance_after)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">ลูกค้าได้รับ</span><span className="font-semibold text-primary">+{receipt?.xp} XP{receipt?.drop ? ` · ${receipt.drop.emoji} ${receipt.drop.name}` : ""}</span></div>
-              </div>
+              <p className="mt-2 text-xl font-bold text-emerald-700">
+                {receipt?.rescue_deal ? "ส่งมอบเมนูกู้ชีพสำเร็จ ✓" : "ปิดบิลสำเร็จ ✓"}
+              </p>
+
+              {receipt?.rescue_deal ? (
+                <div className="mt-4 w-full space-y-2 rounded-xl bg-white/90 p-4 text-left text-sm border border-emerald-200">
+                  <div className="flex justify-between"><span className="text-muted-foreground">เมนู</span><span className="font-extrabold text-foreground">{receipt.item_title}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">ผู้รับ</span><span className="font-bold">{receipt.customer}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">วันที่</span><span>{receipt.date}</span></div>
+                  <div className="flex justify-between border-t pt-1.5 text-emerald-700 font-black">
+                    <span>🌱 คะแนนโบนัสที่มอบ</span>
+                    <span>Eco-XP x2 (+100 XP)</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 w-full space-y-1.5 rounded-xl bg-white/80 p-4 text-left text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">ยอดบิล</span><span>{fmtBaht(receipt?.bill_amount)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">ส่วนลดคูปอง</span><span className="text-emerald-600">-{fmtBaht(receipt?.discount_amount)}</span></div>
+                  {receipt?.story_bonus > 0 && (
+                    <div className="flex justify-between"><span className="text-muted-foreground">📸 โบนัสแชร์สตอรี่</span><span className="text-fuchsia-600">-{fmtBaht(receipt?.story_bonus)}</span></div>
+                  )}
+                  <div className="flex justify-between font-bold"><span>ยอดสุทธิที่เรียกเก็บ</span><span>{fmtBaht(receipt?.final_paid_amount)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">ค่าคอมมิชชันที่หัก ({pct(receipt?.commission_rate)}{receipt?.pro_applied ? " · Pro" : ""})</span><span className="text-primary">-{fmtBaht(receipt?.commission_fee)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">เครดิตคงเหลือ</span><span className="font-semibold">{fmtBaht(receipt?.balance_after)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">ลูกค้าได้รับ</span><span className="font-semibold text-primary">+{receipt?.xp} XP{receipt?.drop ? ` · ${receipt.drop.emoji} ${receipt.drop.name}` : ""}</span></div>
+                </div>
+              )}
               {receipt?.grace_used && (
                 <p className="mt-3 rounded-xl bg-amber-100 p-2 text-center text-xs font-medium text-amber-700">
                   ⚠️ ทำรายการใน Grace Period — เครดิตติดลบชั่วคราว กรุณาเติมเงินที่หน้ากระเป๋าเงิน

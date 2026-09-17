@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Utensils, BellRing, Plus } from "lucide-react";
+import { Utensils, BellRing, Plus, Flame } from "lucide-react";
+import QuickRescueModal from "@/components/merchant/QuickRescueModal";
 
 const ACTIONS = [
   {
@@ -20,10 +22,45 @@ const ACTIONS = [
   },
 ];
 
-export default function QuickActions() {
+export default function QuickActions({ onRescueCreated }) {
+  const [rescueOpen, setRescueOpen] = useState(false);
+
   return (
     <div className="mb-6">
-      <h3 className="mb-3 font-semibold">ทางลัดด่วน</h3>
+      {/* 🚨 Quick Rescue Deal Spotlight Button */}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => setRescueOpen(true)}
+          className="group relative w-full overflow-hidden rounded-3xl bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 p-0.5 shadow-lg transition-all hover:shadow-xl active:scale-[0.99]"
+        >
+          <div className="flex items-center justify-between gap-3 rounded-[22px] bg-white/95 dark:bg-card/95 px-5 py-3.5 backdrop-blur">
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-md group-hover:scale-105 transition-transform">
+                <Flame className="h-6 w-6 animate-pulse" />
+              </span>
+              <div className="text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm sm:text-base font-extrabold text-foreground">
+                    🚨 ปล่อยดีลกู้ชีพด่วน (Quick Rescue Deal)
+                  </span>
+                  <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                    เคลียร์สต็อก
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  ปล่อยเมนูใกล้หมด ลด 50-70% ให้ลูกค้ารีบมารับหน้าร้านใน 30 วินาที
+                </p>
+              </div>
+            </div>
+            <span className="hidden sm:inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow">
+              เปิดดีลทันที
+            </span>
+          </div>
+        </button>
+      </div>
+
+      <h3 className="mb-3 font-semibold text-sm">ทางลัดด่วน</h3>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {ACTIONS.map((a) => (
           <Link
@@ -41,6 +78,12 @@ export default function QuickActions() {
           </Link>
         ))}
       </div>
+
+      <QuickRescueModal
+        open={rescueOpen}
+        onOpenChange={setRescueOpen}
+        onCreated={onRescueCreated}
+      />
     </div>
   );
 }

@@ -1,0 +1,58 @@
+{
+  "name": "RescueDeal",
+  "type": "object",
+  "properties": {
+    "merchant_id": {
+      "type": "string"
+    },
+    "merchant_name": {
+      "type": "string"
+    },
+    "menu_item_id": {
+      "type": "string"
+    },
+    "item_name": {
+      "type": "string"
+    },
+    "item_image": {
+      "type": "string"
+    },
+    "original_price": {
+      "type": "number"
+    },
+    "deal_price": {
+      "type": "number"
+    },
+    "initial_qty": {
+      "type": "number",
+      "default": 1
+    },
+    "remaining_qty": {
+      "type": "number",
+      "default": 1
+    },
+    "pickup_deadline": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "sold_out",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "eco_xp": {
+      "type": "number",
+      "default": 100
+    }
+  },
+  "required": [
+    "merchant_id",
+    "item_name",
+    "original_price",
+    "deal_price",
+    "pickup_deadline"
+  ]
+}

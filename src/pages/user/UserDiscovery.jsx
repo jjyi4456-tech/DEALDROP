@@ -12,6 +12,7 @@ import PullToRefresh from "@/components/user/PullToRefresh";
 import MysteryDropFab from "@/components/user/MysteryDropFab";
 import MysteryBoxModal from "@/components/user/MysteryBoxModal";
 import FlashQuestCard from "@/components/user/FlashQuestCard";
+import RescueDealCard from "@/components/user/RescueDealCard";
 import QuestCountdownBadge from "@/components/user/QuestCountdownBadge";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -41,6 +42,7 @@ const filterKey = (f) => ({ "☕ คาเฟ่": "cafe", "🍜 อาหาร
 
 export default function UserDiscovery() {
   const [quests, setQuests] = useState([]);
+  const [rescueDeals, setRescueDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ทั้งหมด");
   const [merchantMap, setMerchantMap] = useState({});
@@ -52,17 +54,20 @@ export default function UserDiscovery() {
 
   const load = async () => {
     base44.auth.me().then(setMe).catch(() => {});
-    const [q, merchants, bounce] = await Promise.all([
+    const [q, merchants, bounce, rescues] = await Promise.all([
       base44.entities.Quest.filter({ status: "active" }, "-quest_date", 30),
       base44.entities.Merchant.list(),
       // 🎁 unopened bounce-back gift boxes waiting to surprise the customer
       base44.entities.Coupon.filter({ coupon_type: "bounce_back", box_opened: false, status: "available" }, "-created_date", 5).catch(() => []),
+      // 🚨 Daily Rescue Deals
+      base44.entities.RescueDeal.filter({ status: "active" }, "-created_at", 10).catch(() => []),
     ]);
     const map = {};
     merchants.forEach((m) => { map[m.id] = m; });
     setMerchantMap(map);
     setQuests(q);
     setBounceQueue(bounce || []);
+    setRescueDeals(rescues || []);
     setLoading(false);
   };
   useEffect(() => {
@@ -137,6 +142,33 @@ export default function UserDiscovery() {
             setBounceQueue((q) => q.slice(1));
           }}
         />
+      )}
+
+      {/* 🚨 Daily Rescue Deals Section (Item-specific Clearance) */}
+      {rescueDeals.length > 0 && (
+        <div className="mb-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-red-600 text-white shadow-xs">
+                <Zap className="h-3.5 w-3.5 fill-white" />
+              </span>
+              <h2 className="text-base font-black text-foreground">🚨 ดีลกู้ชีพประจำวัน (Rescue Deals)</h2>
+            </div>
+            <span className="text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/60 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-900">
+              เคลียร์สต็อก · Eco-XP x2
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {rescueDeals.map((deal) => (
+              <RescueDealCard
+                key={deal.id}
+                deal={deal}
+                onClaimSuccess={() => load()}
+              />
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
