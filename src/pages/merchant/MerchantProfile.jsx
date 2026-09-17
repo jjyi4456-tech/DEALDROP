@@ -12,7 +12,6 @@ import { shopQrPayload } from "@/lib/questTime";
 import QuestManagementCard from "@/components/merchant/QuestManagementCard";
 import InsightSummaryCard from "@/components/merchant/InsightSummaryCard";
 import SubscriptionStatusCard from "@/components/merchant/SubscriptionStatusCard";
-import SlackSettingsCard from "@/components/merchant/SlackSettingsCard";
 import StoryBoostSettingsCard from "@/components/merchant/StoryBoostSettingsCard";
 import PartnerAgreementCard from "@/components/merchant/PartnerAgreementCard";
 
@@ -237,9 +236,6 @@ export default function MerchantProfile() {
 
       {/* Partner agreement & commission terms (legal audit) */}
       <PartnerAgreementCard merchantId={merchant?.id} merchantName={merchant?.name} />
-
-      {/* Slack connection (per-merchant Incoming Webhook) */}
-      <SlackSettingsCard merchantId={merchant?.id} webhookUrl={merchant?.slack_webhook_url} />
 
       {/* Shop QR (Double Lock) */}
       {merchant?.id && (
