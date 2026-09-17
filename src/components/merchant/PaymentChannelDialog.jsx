@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CreditCard, QrCode, Loader2, ShieldCheck } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-const TIER_LABEL = { starter: "Starter", growth: "Growth", premium: "Premium" };
+import { TIER_LABELS } from "@/lib/plansConfig";
 
 export default function PaymentChannelDialog({ open, plan, merchant, onClose }) {
   const [email, setEmail] = useState("");
@@ -56,7 +56,7 @@ export default function PaymentChannelDialog({ open, plan, merchant, onClose }) 
         <DialogHeader>
           <DialogTitle>เลือกช่องทางการชำระเงิน</DialogTitle>
           <DialogDescription>
-            อัปเกรดเป็น {TIER_LABEL[plan.code] || plan.name} · ฿{plan.price.toLocaleString()}{method === "card" ? "/เดือน" : " /รอบ"}
+            อัปเกรดเป็น {TIER_LABELS[plan.code] || plan.name} · ฿{(plan.code === "pro" ? 259 : plan.price).toLocaleString()}{method === "card" ? "/เดือน" : " /รอบ"}
           </DialogDescription>
         </DialogHeader>
 
@@ -103,7 +103,7 @@ export default function PaymentChannelDialog({ open, plan, merchant, onClose }) 
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose} disabled={loading}>ยกเลิก</Button>
               <Button onClick={confirm} disabled={loading}>
-                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังเปิดหน้าชำระ...</> : `ชำระ ฿${plan.price.toLocaleString()}`}
+                {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังเปิดหน้าชำระ...</> : `ชำระ ฿${(plan.code === "pro" ? 259 : plan.price).toLocaleString()}`}
               </Button>
             </div>
           </div>

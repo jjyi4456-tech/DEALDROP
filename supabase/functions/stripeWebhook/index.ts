@@ -129,18 +129,23 @@ serve(async (req: Request) => {
         }
       } else {
         await upgradeMerchant(meta.merchant_id, meta.plan_code, meta.payment_mode);
-        if (meta.type === "pro_booster_subscription" && meta.merchant_id) {
+        if (meta.merchant_id && (meta.plan_code === "pro" || meta.type === "pro_booster_subscription")) {
           await supabase.from("merchants").update({
             is_pro: true,
+            tier: "pro",
             commission_rate: 0.03,
-            stripe_subscription_id: session.subscription,
+            stripe_subscription_id: session.subscription || null,
           }).eq("id", meta.merchant_id);
         }
       }
     } else if (event.type === "customer.subscription.deleted") {
       const meta = event.data?.object?.metadata || {};
       if (meta.merchant_id) {
-        await supabase.from("merchants").update({ tier: "starter" }).eq("id", meta.merchant_id);
+        await supabase.from("merchants").update({
+          tier: "starter",
+          is_pro: false,
+          commission_rate: 0.06,
+        }).eq("id", meta.merchant_id);
       }
     }
 

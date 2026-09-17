@@ -4,8 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { CreditCard, Crown, ChevronRight, Loader2 } from "lucide-react";
 
 // Current subscription plan status with an upgrade shortcut.
-const TIER_LABEL = { starter: "Starter", growth: "Growth", premium: "Premium" };
-const TIER_COLOR = { starter: "#10b981", growth: "#3b82f6", premium: "#f59e0b" };
+import { TIER_LABELS, TIER_COLORS } from "@/lib/plansConfig";
 
 export default function SubscriptionStatusCard({ tier }) {
   const [plan, setPlan] = useState(null);
@@ -43,8 +42,8 @@ export default function SubscriptionStatusCard({ tier }) {
           <div>
             <p className="text-xs text-muted-foreground">แพ็กเกจปัจจุบัน</p>
             <p className="text-lg font-bold" style={{ color }}>
-              {TIER_LABEL[tier] || tier}
-              {tier === "premium" && <Crown className="ml-1 inline h-4 w-4 text-amber-500" />}
+              {TIER_LABELS[tier] || tier}
+              {(tier === "pro" || tier === "premium" || tier === "growth") && <Crown className="ml-1 inline h-4 w-4 text-amber-500" />}
             </p>
           </div>
         </div>

@@ -14,7 +14,7 @@ import InvoicesPanel from "@/components/finance/InvoicesPanel";
 import PlansPanel from "@/components/finance/PlansPanel";
 import PaymentChannelDialog from "@/components/merchant/PaymentChannelDialog";
 
-const TIER_LABEL = { starter: "Starter", growth: "Growth", premium: "Premium" };
+import { TIER_LABELS } from "@/lib/plansConfig";
 const fmtBaht = (n) => `฿${(n ?? 0).toLocaleString("th-TH", { maximumFractionDigits: 2 })}`;
 
 export default function Finance() {
@@ -86,7 +86,7 @@ export default function Finance() {
     if (status === "success") {
       toast({
         title: "ชำระเงินสำเร็จ 🎉",
-        description: `อัปเกรดเป็น ${TIER_LABEL[searchParams.get("plan")] || "Premium"} แล้ว · สิทธิ์เปิดอัตโนมัติ`,
+        description: `อัปเกรดเป็น ${TIER_LABELS[searchParams.get("plan")] || "Pro Booster"} แล้ว · สิทธิ์เปิดอัตโนมัติ`,
       });
       load(true);
     } else if (status === "cancelled") {

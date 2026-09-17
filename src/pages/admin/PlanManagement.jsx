@@ -5,6 +5,8 @@ import { Check, Pencil, Save, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 
+import { DEFAULT_PLANS } from "@/lib/plansConfig";
+
 export default function PlanManagement() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,8 +16,17 @@ export default function PlanManagement() {
 
   const load = async () => {
     setLoading(true);
-    try { setPlans(await base44.entities.SubscriptionPlan.list("price", 50)); }
-    finally { setLoading(false); }
+    try {
+      const rows = await base44.entities.SubscriptionPlan.list("price", 50);
+      // Filter or map to ensure Starter & Pro 259 THB
+      const merged = DEFAULT_PLANS.map((def) => {
+        const found = rows.find((r) => r.code === def.code);
+        return found ? { ...def, ...found, price: def.code === "pro" && !found.price ? 259 : found.price } : def;
+      });
+      setPlans(merged);
+    } catch {
+      setPlans(DEFAULT_PLANS);
+    } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -39,9 +50,9 @@ export default function PlanManagement() {
     <div>
       <PageHeader title="จัดการแพ็กเกจรายเดือน" subtitle="กำหนดราคา สิทธิ์ และโควตาของแต่ละ Tier (Feature Toggling)" />
       {loading ? (
-        <div className="grid gap-4 lg:grid-cols-3">{[1, 2, 3].map((i) => <div key={i} className="h-96 animate-pulse rounded-2xl bg-muted" />)}</div>
+        <div className="grid gap-6 md:grid-cols-2">{[1, 2].map((i) => <div key={i} className="h-96 animate-pulse rounded-2xl bg-muted" />)}</div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {plans.map((p) => {
             const editing = editId === p.id;
             const d = editing ? draft : p;

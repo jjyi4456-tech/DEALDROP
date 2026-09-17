@@ -13,12 +13,22 @@ import MerchantRescueDealsSection from "@/components/merchant/MerchantRescueDeal
 export default function MerchantDashboard() {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [myMerchant, setMyMerchant] = useState(null);
   const [rescueRefreshKey, setRescueRefreshKey] = useState(0);
 
   useEffect(() => {
     (async () => {
-      try { setQuests(await base44.entities.Quest.list("-quest_date", 50)); }
-      finally { setLoading(false); }
+      try {
+        const [qs, me] = await Promise.all([
+          base44.entities.Quest.list("-quest_date", 50),
+          base44.auth.me().catch(() => null),
+        ]);
+        setQuests(qs);
+        if (me) {
+          const mine = await base44.entities.Merchant.filter({ created_by_id: me.id }, "-created_date", 1);
+          setMyMerchant(mine[0] || null);
+        }
+      } finally { setLoading(false); }
     })();
   }, []);
 
@@ -30,16 +40,25 @@ export default function MerchantDashboard() {
       <PageHeader title="หน้าหลักร้าน" subtitle="ภาพรวมการดำเนินงานและสถานะแพ็กเกจของคุณ"
         action={<Link to="/merchant/finance" className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">จัดการแพ็กเกจ</Link>} />
 
-      <div className="mb-6 rounded-2xl bg-primary p-6 text-primary-foreground">
+      <div className="mb-6 rounded-2xl bg-gradient-to-r from-primary to-primary/80 p-6 text-primary-foreground shadow-md">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm opacity-90">แพ็กเกจปัจจุบัน</p>
-            <p className="text-3xl font-bold">Growth · ฿299/เดือน</p>
-            <p className="mt-1 text-sm opacity-80">ต่ออายุอัตโนมัติ 17 ส.ค. 2026 · เหลือ 4 วัน</p>
+            <p className="text-xs uppercase tracking-wider opacity-85 font-semibold">สถานะแพ็กเกจปัจจุบัน</p>
+            <p className="text-2xl sm:text-3xl font-black mt-0.5">
+              {myMerchant?.is_pro || myMerchant?.tier === "pro" || myMerchant?.tier === "growth" || myMerchant?.tier === "premium"
+                ? "Pro Booster ⭐ ฿259/เดือน"
+                : "Starter · ฟรีตลอดชีพ"}
+            </p>
+            <p className="mt-1 text-xs opacity-90">
+              {myMerchant?.is_pro || myMerchant?.tier === "pro" || myMerchant?.tier === "growth" || myMerchant?.tier === "premium"
+                ? "ค่าคอมมิชชั่นลดเหลือ 3% · ผู้เล่นได้รับโบนัส 70 XP ทุกเควสต์"
+                : "ค่าคอมมิชชั่น 6% · อัปเกรดเป็น Pro Booster เพียง ฿259/เดือน เพื่อรับสิทธิ์พิเศษ"}
+            </p>
           </div>
           <div className="flex gap-2">
-            <Link to="/merchant/finance" className="rounded-xl bg-white/20 px-4 py-2 text-sm font-medium backdrop-blur hover:bg-white/30">อัปเกรด</Link>
-            <Link to="/merchant/finance" className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-primary hover:bg-white/90">ซื้อ Add-on</Link>
+            <Link to="/merchant/finance" className="rounded-xl bg-white/20 px-4 py-2.5 text-xs sm:text-sm font-bold backdrop-blur hover:bg-white/30 transition">
+              {myMerchant?.is_pro ? "จัดการแพ็กเกจ" : "⚡ อัปเกรด Pro (฿259)"}
+            </Link>
           </div>
         </div>
       </div>

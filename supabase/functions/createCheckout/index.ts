@@ -103,7 +103,9 @@ serve(async (req: Request) => {
         });
       }
 
-      const plan = plans[0];
+      const plan = (plans && plans[0]) || { name: "Pro Booster", code: "pro", price: 259 };
+      const planPrice = planCode === "pro" ? 259 : (Number(plan.price) || 259);
+
       params.set("metadata[plan_code]", planCode);
       params.set("metadata[payment_method]", paymentMethod);
       if (contactName) params.set("metadata[contact_name]", contactName);
@@ -115,8 +117,8 @@ serve(async (req: Request) => {
         params.set("payment_method_types[0]", "promptpay");
         params.set("line_items[0][quantity]", "1");
         params.set("line_items[0][price_data][currency]", "thb");
-        params.set("line_items[0][price_data][unit_amount]", String(plan.price * 100));
-        params.set("line_items[0][price_data][product_data][name]", `DEALDROP ${plan.name} (รายเดือน)`);
+        params.set("line_items[0][price_data][unit_amount]", String(Math.round(planPrice * 100)));
+        params.set("line_items[0][price_data][product_data][name]", `DEALDROP ${plan.name || "Pro Booster"} (รายเดือน ฿259)`);
         params.set("metadata[payment_mode]", "one_time");
         params.set("success_url", `${origin}/merchant/finance?status=success&plan=${planCode}`);
         params.set("cancel_url", `${origin}/merchant/finance?status=cancelled`);
@@ -141,8 +143,8 @@ serve(async (req: Request) => {
           params.set("payment_method_types[0]", "card");
           params.set("line_items[0][quantity]", "1");
           params.set("line_items[0][price_data][currency]", "thb");
-          params.set("line_items[0][price_data][unit_amount]", String(Math.round((plan.price || 0) * 100)));
-          params.set("line_items[0][price_data][product_data][name]", `DEALDROP ${plan.name} (รายเดือน)`);
+          params.set("line_items[0][price_data][unit_amount]", String(Math.round(planPrice * 100)));
+          params.set("line_items[0][price_data][product_data][name]", `DEALDROP ${plan.name || "Pro Booster"} (รายเดือน ฿259)`);
           params.set("metadata[type]", "pro_booster_subscription");
           params.set("metadata[payment_mode]", "one_time");
           params.set("success_url", `${origin}/merchant/finance?status=success&plan=${planCode}`);
