@@ -6,7 +6,6 @@ import ImageUpload from "@/components/shared/ImageUpload";
 import EditProfileSheet from "@/components/user/EditProfileSheet";
 import BadgesSection from "@/components/user/BadgesSection";
 import SettingsCard from "@/components/user/SettingsCard";
-import ReceiptPrivacyGuard from "@/components/user/ReceiptPrivacyGuard";
 import { useToast } from "@/components/ui/use-toast";
 
 const XP_PER_LEVEL = 500;
@@ -133,9 +132,6 @@ export default function UserProfile() {
 
       {/* Badges */}
       <BadgesSection user={user} />
-
-      {/* Receipt upload with PDPA consent guard */}
-      <ReceiptPrivacyGuard />
 
       {/* Reward Wallet shortcut */}
       <Link to="/user/bag" className="mb-6 flex items-center justify-between rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md">

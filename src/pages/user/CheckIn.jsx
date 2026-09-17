@@ -216,6 +216,10 @@ export default function CheckIn() {
       } catch { /* non-fatal: drop is a bonus, not a requirement */ }
       setReward({ xp: xpReward, discount: rewardLabel(fresh), drop });
       setStage("success");
+      // Auto redirect to order screen after 2.5 seconds
+      setTimeout(() => {
+        navigate(`/user/order/${fresh.merchant_id}?checkedin=1`);
+      }, 2500);
     } catch (e) {
       // Rollback the optimistic quota deduction with the latest server state
       try { setLiveQuest(await base44.entities.Quest.get(questId)); } catch { setLiveQuest(snapshotQuest); }
@@ -285,6 +289,10 @@ export default function CheckIn() {
         setReward({ xp: d.xp, discount: d.coupon ? rewardLabel(d.coupon) : "", drop: d.drop || null });
         setStage("success");
         if (d.checkin_id) base44.functions.invoke("notifyRankDrop", { checkin_id: d.checkin_id }).catch(() => {});
+        // Auto redirect to order screen after 2.5 seconds
+        setTimeout(() => {
+          navigate(`/user/order/${liveQuest.merchant_id}?checkedin=1`);
+        }, 2500);
       } catch (e) {
         const payload = e?.response?.data || e?.data || {};
         const code = payload.error || "UNKNOWN";
@@ -495,8 +503,10 @@ export default function CheckIn() {
                 <Link to="/user/bag" className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">ดูคลัง</Link>
               </div>
             )}
-            <Link to={`/user/order/${liveQuest.merchant_id}`} className="mt-5 block w-full rounded-2xl bg-primary py-3 text-sm font-bold text-primary-foreground">สั่งอาหารเลย 🍽️</Link>
-            <Link to="/user/bag" className="mt-2 block w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground">ดูคูปองในกระเป๋า</Link>
+            <Link to={`/user/order/${liveQuest.merchant_id}`} className="mt-5 block w-full rounded-2xl bg-primary py-3.5 text-sm font-extrabold text-primary-foreground shadow-md hover:bg-primary/90 transition flex items-center justify-center gap-2">
+              <span>กำลังพาท่านไปหน้าสั่งอาหารอัตโนมัติ... 🍽️</span>
+            </Link>
+            <p className="mt-2 text-xs text-muted-foreground animate-pulse">ระบบจะเปิดหน้าจอสั่งอาหารและระบุโต๊ะใน 2 วินาที</p>
           </motion.div>
         )}
 

@@ -8,6 +8,12 @@ import MenuList from "@/components/user/MenuList";
 import CartSheet from "@/components/user/CartSheet";
 import MenuItemCustomizeModal from "@/components/user/MenuItemCustomizeModal";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Users, Armchair } from "lucide-react";
+
 export default function OrderMenu() {
   const { merchantId } = useParams();
   const { toast } = useToast();
@@ -23,11 +29,13 @@ export default function OrderMenu() {
   const [placed, setPlaced] = useState(null);
   const [customizeItem, setCustomizeItem] = useState(null);
 
-  // Table QR link: /user/order/:merchantId?table=3 → "โต๊ะ 3", else pick-up
-  const tableNo = useMemo(() => {
-    const t = new URLSearchParams(window.location.search).get("table");
-    return t ? `โต๊ะ ${t}` : "Pick-up";
-  }, []);
+  // Table number and Party size state
+  const paramTable = new URLSearchParams(window.location.search).get("table");
+  const [tableInput, setTableInput] = useState(paramTable || "");
+  const [guestCount, setGuestCount] = useState(2);
+  const [tableModalOpen, setTableModalOpen] = useState(!paramTable); // auto open prompt if no table in url
+
+  const tableDisplay = tableInput ? `โต๊ะ ${tableInput}` : "หน้าร้าน / Pick-up";
 
   useEffect(() => {
     (async () => {
@@ -117,7 +125,7 @@ export default function OrderMenu() {
         merchant_owner_id: merchant.created_by_id,
         user_id: me?.id,
         user_name: me?.full_name || me?.email || "ลูกค้า",
-        table_no: tableNo,
+        table_no: `${tableDisplay}${guestCount ? ` (${guestCount} คน)` : ""}`,
         items: cart.map((l) => ({ menu_id: l.menu_id, name: l.name, price: l.price, quantity: l.quantity, note: l.note || "" })),
         total,
         total_amount: total,
@@ -174,9 +182,15 @@ export default function OrderMenu() {
             <h1 className="truncate text-lg font-bold leading-tight">{merchant.name}</h1>
             <p className="text-xs text-muted-foreground">สแกนสั่งจากโต๊ะ ส่งเข้าครัวทันที 🍽️</p>
           </div>
-          <span className="shrink-0 rounded-xl bg-primary px-3 py-2 text-sm font-extrabold text-primary-foreground shadow-sm">
-            🪑 {tableNo}
-          </span>
+          <button
+            type="button"
+            onClick={() => setTableModalOpen(true)}
+            className="shrink-0 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-xs sm:text-sm font-black text-primary shadow-xs hover:bg-primary/20 transition flex items-center gap-1.5"
+          >
+            <Armchair className="h-4 w-4 text-primary" />
+            <span>{tableDisplay}</span>
+            <span className="text-[10px] text-muted-foreground font-semibold">({guestCount} คน)</span>
+          </button>
         </div>
       </div>
 
@@ -198,6 +212,65 @@ export default function OrderMenu() {
           <span className="text-sm font-bold">฿{netTotal} · ดูตะกร้า →</span>
         </button>
       )}
+
+      {/* Table & Guests Entry Modal */}
+      <Dialog open={tableModalOpen} onOpenChange={setTableModalOpen}>
+        <DialogContent className="max-w-xs rounded-3xl p-6 text-center">
+          <DialogHeader className="text-center sm:text-center">
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Armchair className="h-6 w-6" />
+            </div>
+            <DialogTitle className="text-lg font-black">ระบุโต๊ะและจำนวนลูกค้า</DialogTitle>
+            <DialogDescription className="text-xs">
+              กรุณาระบุตำแหน่งที่นั่งเพื่อให้พนักงานเสิร์ฟอาหารได้ถูกต้อง
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-3.5 text-left">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">หมายเลขโต๊ะ</Label>
+              <Input
+                placeholder="เช่น 1, A2, โซนริมระเบียง"
+                value={tableInput}
+                onChange={(e) => setTableInput(e.target.value)}
+                className="h-11 rounded-xl font-bold"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">จำนวนคน</Label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, "5+"].map((n) => {
+                  const num = typeof n === "number" ? n : 5;
+                  const active = guestCount === num;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setGuestCount(num)}
+                      className={`flex-1 rounded-xl py-2 text-xs font-bold transition border ${
+                        active
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-muted/40 hover:bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => setTableModalOpen(false)}
+              className="w-full h-11 rounded-xl bg-primary font-bold text-primary-foreground mt-2"
+            >
+              ยืนยันและเริ่มสั่งอาหาร 🍽️
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <MenuItemCustomizeModal
         item={customizeItem}
