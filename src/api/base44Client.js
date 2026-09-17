@@ -113,12 +113,21 @@ const authAdapter = {
       const profile = await appClient.entities.User.get(user.id);
       return { ...user, ...profile };
     } catch {
-      return {
+      const fallbackUser = {
         id: user.id,
         email: user.email,
+        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
         role: user.user_metadata?.role || 'user',
+        created_at: user.created_at || new Date().toISOString(),
         ...user.user_metadata
       };
+      // Try auto-creating in users table so app features work seamlessly
+      try {
+        await appClient.entities.User.create(fallbackUser);
+      } catch (err) {
+        // Table might already have it or rules restrict
+      }
+      return fallbackUser;
     }
   },
 

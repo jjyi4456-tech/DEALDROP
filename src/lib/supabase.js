@@ -159,6 +159,59 @@ class SupabaseAuth {
   constructor(client) {
     this.client = client;
     this.STORAGE_KEY = 'sb_session';
+    this.handleUrlHash();
+  }
+
+  handleUrlHash() {
+    if (typeof window === 'undefined') return;
+    try {
+      const hash = window.location.hash;
+      if (!hash || !hash.includes('access_token=')) return;
+
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      const expiresIn = params.get('expires_in');
+      const tokenType = params.get('token_type') || 'bearer';
+
+      if (accessToken) {
+        // Build session object
+        const session = {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: expiresIn ? Number(expiresIn) : 3600,
+          token_type: tokenType,
+          user: null
+        };
+        this.saveSession(session);
+
+        // Fetch user data from Supabase Auth
+        fetch(`${this.client.url}/auth/v1/user`, {
+          headers: {
+            'apikey': this.client.key,
+            'Authorization': `Bearer ${accessToken}`
+          }
+        })
+          .then(res => res.json())
+          .then(userData => {
+            if (userData && userData.id) {
+              session.user = userData;
+              this.saveSession(session);
+              // Clean up hash from URL
+              const cleanUrl = window.location.pathname + window.location.search;
+              window.history.replaceState(null, '', cleanUrl);
+              // Reload or trigger auth check
+              window.dispatchEvent(new Event('storage'));
+              window.location.reload();
+            }
+          })
+          .catch(err => {
+            console.error('[SupabaseAuth] Failed to fetch user profile:', err);
+          });
+      }
+    } catch (e) {
+      console.warn('[SupabaseAuth] Error parsing hash tokens:', e);
+    }
   }
 
   getToken() {
@@ -218,7 +271,11 @@ class SupabaseAuth {
   }
 
   async signInWithOAuth({ provider, options = {} }) {
-    const redirectTo = options.redirectTo || window.location.href;
+    const defaultRedirect = window.location.origin;
+    let redirectTo = options.redirectTo || defaultRedirect;
+    if (redirectTo.startsWith('/')) {
+      redirectTo = `${window.location.origin}${redirectTo}`;
+    }
     const authUrl = `${this.client.url}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectTo)}`;
     window.location.href = authUrl;
   }
