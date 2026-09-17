@@ -186,10 +186,12 @@ const functionsAdapter = {
     }
     const { data, error } = await supabase.functions.invoke(functionName, { body: payload });
     if (error) {
-      console.warn(`[Supabase Function] ${functionName} fallback:`, error);
-      return { success: true, data: null };
+      console.warn(`[Supabase Function] ${functionName} error:`, error);
+      const errMsg = error.message || error.error || (typeof error === 'string' ? error : 'Function invocation failed');
+      throw new Error(errMsg);
     }
-    return data;
+    // Return both standard and nested data accessor for maximum compatibility with all callers
+    return { data, ...data };
   }
 };
 

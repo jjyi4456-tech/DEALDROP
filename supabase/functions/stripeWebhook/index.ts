@@ -88,7 +88,25 @@ serve(async (req: Request) => {
       if (meta.type === "wallet_topup") {
         const merchantId = meta.merchant_id;
         const addedAmount = Number(meta.topup_amount);
+        const sessionId = session.id;
+
         if (merchantId && addedAmount > 0) {
+          // Check idempotency: prevent double credit if Stripe retries webhook
+          if (sessionId) {
+            const { data: existing } = await supabase
+              .from("merchantledgers")
+              .select("id")
+              .eq("reference_id", sessionId)
+              .limit(1);
+
+            if (existing && existing.length > 0) {
+              return new Response(JSON.stringify({ received: true, already_processed: true }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          }
+
           const { data: merchant } = await supabase
             .from("merchants")
             .select("*")
@@ -105,7 +123,8 @@ serve(async (req: Request) => {
             type: "topup",
             amount: addedAmount,
             balance_after: newBalance,
-            description: "เติมเงินผ่าน Stripe PromptPay/Card สำเร็จ",
+            reference_id: sessionId || null,
+            description: `เติมเงินผ่าน Stripe PromptPay/Card สำเร็จ (${sessionId || 'Checkout'})`,
           });
         }
       } else {

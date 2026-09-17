@@ -121,25 +121,33 @@ serve(async (req: Request) => {
         params.set("success_url", `${origin}/merchant/finance?status=success&plan=${planCode}`);
         params.set("cancel_url", `${origin}/merchant/finance?status=cancelled`);
       } else {
-        // Recurring Card Subscription
-        if (!plan.stripe_price_id) {
-          return new Response(JSON.stringify({ error: "plan not configured for payment" }), {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+        // Recurring Card Subscription or direct Card Payment
+        if (plan.stripe_price_id) {
+          params.set("mode", "subscription");
+          params.set("payment_method_types[0]", "card");
+          params.set("line_items[0][price]", plan.stripe_price_id);
+          params.set("line_items[0][quantity]", "1");
+          params.set("metadata[type]", "pro_booster_subscription");
+          params.set("metadata[payment_mode]", "subscription");
+          params.set("subscription_data[metadata][type]", "pro_booster_subscription");
+          params.set("subscription_data[metadata][merchant_id]", merchantId);
+          params.set("subscription_data[metadata][plan_code]", planCode);
+          params.set("subscription_data[metadata][payment_method]", paymentMethod);
+          params.set("success_url", `${origin}/merchant/finance?sub=success`);
+          params.set("cancel_url", `${origin}/merchant/finance?status=cancelled`);
+        } else {
+          // Fallback to one-time card checkout if no Stripe Price ID configured yet
+          params.set("mode", "payment");
+          params.set("payment_method_types[0]", "card");
+          params.set("line_items[0][quantity]", "1");
+          params.set("line_items[0][price_data][currency]", "thb");
+          params.set("line_items[0][price_data][unit_amount]", String(Math.round((plan.price || 0) * 100)));
+          params.set("line_items[0][price_data][product_data][name]", `DEALDROP ${plan.name} (รายเดือน)`);
+          params.set("metadata[type]", "pro_booster_subscription");
+          params.set("metadata[payment_mode]", "one_time");
+          params.set("success_url", `${origin}/merchant/finance?status=success&plan=${planCode}`);
+          params.set("cancel_url", `${origin}/merchant/finance?status=cancelled`);
         }
-        params.set("mode", "subscription");
-        params.set("payment_method_types[0]", "card");
-        params.set("line_items[0][price]", plan.stripe_price_id);
-        params.set("line_items[0][quantity]", "1");
-        params.set("metadata[type]", "pro_booster_subscription");
-        params.set("metadata[payment_mode]", "subscription");
-        params.set("subscription_data[metadata][type]", "pro_booster_subscription");
-        params.set("subscription_data[metadata][merchant_id]", merchantId);
-        params.set("subscription_data[metadata][plan_code]", planCode);
-        params.set("subscription_data[metadata][payment_method]", paymentMethod);
-        params.set("success_url", `${origin}/merchant/finance?sub=success`);
-        params.set("cancel_url", `${origin}/merchant/finance?status=cancelled`);
       }
     }
 
