@@ -57,11 +57,14 @@ export default function FlashSurgeCard() {
   const release = async () => {
     if (!merchant || releasing) return;
     setReleasing(true);
+    const isPro = Boolean(merchant?.is_pro || merchant?.tier === "growth" || merchant?.tier === "premium");
+    const flashXp = isPro ? 70 : 50;
+
     try {
       const created = await base44.entities.Quest.create({
         merchant_id: merchant.id,
         merchant_name: merchant.name,
-        title: `⚡ Flash Drop ลด ${discount}% ด่วน 60 นาที`,
+        title: `Flash Drop ${merchant.name} ลด ${discount}%`,
         description: "เรียกลูกค้าเข้าร้านทันทีใน 60 นาที สำหรับช่วงโต๊ะว่างหรือวันฝนตก",
         reward_type: "percent",
         reward_value: String(discount),
@@ -71,11 +74,11 @@ export default function FlashSurgeCard() {
         is_flash: true,
         flash_badge: "⚡ Flash Drop ด่วน 60 นาที",
         expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-        xp_reward: 50,
+        xp_reward: flashXp,
         squad_size: 0,
       });
       setActive(created);
-      toast({ title: "ปล่อยเควสต์ด่วนแล้ว ⚡", description: `ลด ${discount}% · ${tables} โต๊ะ · หมดอายุใน 60 นาที` });
+      toast({ title: "ปล่อยเควสต์ด่วนแล้ว ⚡", description: `ลด ${discount}% · ${tables} โต๊ะ · ให้ ${flashXp} XP (หมดอายุใน 60 นาที)` });
     } catch {
       toast({ title: "ปล่อยเควสต์ไม่สำเร็จ ลองอีกครั้ง", variant: "destructive" });
     } finally {

@@ -50,10 +50,19 @@ export async function secureCheckInDirect(payload) {
     participants: nextParticipants,
   }).catch(() => {});
 
+  // Calculate XP reward: Pro merchant gives 70 XP, standard gives 50 XP
+  let baseReward = quest.xp_reward;
+  if (!baseReward || baseReward === 50) {
+    const merchant = await base44.entities.Merchant.get(merchant_id || quest.merchant_id).catch(() => null);
+    const isPro = Boolean(merchant?.is_pro || merchant?.tier === "growth" || merchant?.tier === "premium");
+    baseReward = isPro ? 70 : 50;
+  }
+  const earnedXp = Number(baseReward) || 50;
+
   // Add XP to user
   if (me?.id) {
     await base44.entities.User.update(me.id, {
-      xp: (Number(me.xp) || 0) + (quest.xp_reward || 50),
+      xp: (Number(me.xp) || 0) + earnedXp,
       total_checkins: (Number(me.total_checkins) || 0) + 1,
     }).catch(() => {});
   }
@@ -62,7 +71,7 @@ export async function secureCheckInDirect(payload) {
     status: "success",
     checkin_id: checkin.id,
     participants: nextParticipants,
-    xp: quest.xp_reward || 50,
+    xp: earnedXp,
     coupon: quest,
   };
 }

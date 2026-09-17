@@ -54,6 +54,9 @@ export default function QuestBuilder() {
   };
   const back = () => setStep((s) => Math.max(1, s - 1));
 
+  const isProMerchant = Boolean(myMerchant?.is_pro || myMerchant?.tier === "growth" || myMerchant?.tier === "premium");
+  const systemXpReward = isProMerchant ? 70 : 50;
+
   const submit = async () => {
     if (!form.title) { toast({ title: "กรุณาตั้งชื่อภารกิจ", variant: "destructive" }); return; }
     await base44.entities.Quest.create({
@@ -62,13 +65,13 @@ export default function QuestBuilder() {
       reward_type: form.reward_type, reward_value: form.reward_value,
       start_time: form.start_time, end_time: form.end_time, quest_date: form.quest_date,
       capacity: Number(form.capacity), participants: 0, status: "active",
-      xp_reward: Number(form.xp_reward),
+      xp_reward: systemXpReward,
       squad_size: Number(form.squad_size) || 0,
     });
     setShowForm(false);
     setStep(1);
-    setForm({ title: "", reward_type: "percent", reward_value: "", start_time: "14:00", end_time: "16:00", capacity: 10, xp_reward: 50, quest_date: TODAY, squad_size: 0 });
-    toast({ title: "สร้างภารกิจแล้ว 🎯" });
+    setForm({ title: "", reward_type: "percent", reward_value: "", start_time: "14:00", end_time: "16:00", capacity: 10, quest_date: TODAY, squad_size: 0 });
+    toast({ title: `สร้างภารกิจสำเร็จ 🎯 (ให้ ${systemXpReward} XP)` });
     load();
   };
 
@@ -176,16 +179,27 @@ export default function QuestBuilder() {
                 <label className="mb-2 block text-sm font-medium">ชื่อภารกิจ</label>
                 <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="เช่น มื้อเที่ยงสบาย ลด 20%" />
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium">XP ที่ผู้ใช้จะได้รับ</label>
-                <Input type="number" value={form.xp_reward} onChange={(e) => setForm({ ...form, xp_reward: e.target.value })} className="w-32" />
+              <div className="rounded-2xl border bg-muted/40 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold">XP รางวัลสำหรับผู้เล่น (ระบบกำหนดอัตโนมัติ)</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {isProMerchant
+                        ? "⭐ ร้านค้าแพ็กเกจโปร (Pro Booster): ผู้เล่นได้รับโบนัส 70 XP ดึงดูดลูกค้ามากขึ้น"
+                        : "ร้านค้ามาตรฐาน: ผู้เล่นได้รับ 50 XP (อัปเกรดเป็นแพ็กเกจโปรเพื่อมอบ 70 XP)"}
+                    </p>
+                  </div>
+                  <span className={`rounded-xl px-3 py-1.5 text-sm font-extrabold ${isProMerchant ? "bg-amber-100 text-amber-700 border border-amber-300" : "bg-primary/10 text-primary"}`}>
+                    +{systemXpReward} XP
+                  </span>
+                </div>
               </div>
               <div className="rounded-xl bg-primary/5 p-4 text-sm">
                 <p className="font-semibold">สรุปภารกิจ</p>
                 <ul className="mt-1 space-y-0.5 text-muted-foreground">
                   <li>รางวัล: {REWARD_TYPES.find((r) => r.value === form.reward_type)?.label} {form.reward_value}</li>
                   <li>เวลา: {form.start_time}-{form.end_time} · {form.quest_date}</li>
-                  <li>จำกัด: {form.capacity} สิทธิ์ · ให้ {form.xp_reward} XP</li>
+                  <li>จำกัด: {form.capacity} สิทธิ์ · ผู้เล่นได้รับ {systemXpReward} XP</li>
                 </ul>
               </div>
             </div>
