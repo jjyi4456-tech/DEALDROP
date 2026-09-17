@@ -107,78 +107,143 @@ export default function LiveQr() {
     );
   }
 
+  const [mode, setMode] = useState("dynamic"); // dynamic | static
+  const [staticQrUrl, setStaticQrUrl] = useState(null);
+
+  useEffect(() => {
+    if (merchant?.id) {
+      QRCode.toDataURL(`hb:shop:${merchant.id}`, {
+        width: 720,
+        margin: 2,
+        color: { dark: "#1f2937", light: "#ffffff" },
+      }).then(setStaticQrUrl).catch(() => {});
+    }
+  }, [merchant?.id]);
+
   const progress = token ? Math.max(0, Math.min(1, remaining / (token.window_ms || 15000))) : 0;
 
   return (
     <div className="mx-auto max-w-xl">
       <div className="mb-4 text-center">
-        <h1 className="text-2xl font-bold">จอ QR หน้าร้าน (Dynamic)</h1>
-        <p className="mt-1 text-sm text-muted-foreground">วางแท็บเล็ต/มือถือไว้ที่เคาน์เตอร์ ให้ลูกค้าสแกนเพื่อเช็คอิน</p>
+        <h1 className="text-2xl font-bold">📱 จอ QR เช็คอินหน้าร้าน</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          แสดง QR Code ให้ลูกค้าสแกนเช็คอินเพื่อรับสิทธิ์และพาไปสั่งอาหารที่โต๊ะ
+        </p>
+
+        {/* Mode Selector */}
+        <div className="mt-4 inline-flex rounded-2xl bg-muted p-1 border">
+          <button
+            onClick={() => setMode("dynamic")}
+            className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              mode === "dynamic" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            ⚡ Dynamic QR (เปลี่ยนทุก 15 วิ - กันโกง)
+          </button>
+          <button
+            onClick={() => setMode("static")}
+            className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              mode === "static" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            🖨️ QR ถาวรประจำร้าน (พิมพ์ตั้งโต๊ะ/หน้าร้าน)
+          </button>
+        </div>
       </div>
 
       <div className={`rounded-3xl border bg-card p-6 shadow-sm transition-colors ${offline ? "border-red-300" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">ร้าน</p>
+            <p className="text-xs text-muted-foreground">ร้านค้า</p>
             <p className="text-lg font-bold">{merchant.name}</p>
           </div>
           <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">
-            <ShieldCheck className="h-3.5 w-3.5" /> ป้องกัน Fake GPS
+            <ShieldCheck className="h-3.5 w-3.5" /> {mode === "dynamic" ? "ป้องกัน Fake GPS & บันทึกจอ" : "QR ประจำสาขา"}
           </span>
         </div>
 
-        <AnimatePresence>
-          {offline && (
-            <motion.div
-              key="offline-banner"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-3 overflow-hidden"
-            >
-              <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
-                <p className="flex items-center gap-2 font-semibold">
-                  <WifiOff className="h-4 w-4" /> ออฟไลน์ชั่วคราว
-                </p>
-                <p className="mt-0.5 text-xs">ยังแสดง QR ล่าสุดไว้ หากลูกค้าสแกนไม่ผ่าน ให้รอเชื่อมต่อกลับมาก่อน</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {mode === "dynamic" ? (
+          <>
+            <AnimatePresence>
+              {offline && (
+                <motion.div
+                  key="offline-banner"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-3 overflow-hidden"
+                >
+                  <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
+                    <p className="flex items-center gap-2 font-semibold">
+                      <WifiOff className="h-4 w-4" /> ออฟไลน์ชั่วคราว
+                    </p>
+                    <p className="mt-0.5 text-xs">ยังแสดง QR ล่าสุดไว้ หากลูกค้าสแกนไม่ผ่าน ให้รอเชื่อมต่อกลับมาก่อน</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        <div className="mt-4 flex justify-center">
-          <motion.div
-            key={token?.token || "qr"}
-            initial={{ opacity: 0.4, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35 }}
-            className="w-full max-w-sm"
-          >
-            {qrUrl ? (
-              <img src={qrUrl} alt="Dynamic QR" className={`w-full rounded-2xl ${offline ? "opacity-60" : ""}`} />
-            ) : (
-              <div className="flex aspect-square w-full items-center justify-center rounded-2xl bg-muted">
-                <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+            <div className="mt-4 flex justify-center">
+              <motion.div
+                key={token?.token || "qr"}
+                initial={{ opacity: 0.4, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.35 }}
+                className="w-full max-w-sm"
+              >
+                {qrUrl ? (
+                  <img src={qrUrl} alt="Dynamic QR" className={`w-full rounded-2xl ${offline ? "opacity-60" : ""}`} />
+                ) : (
+                  <div className="flex aspect-square w-full items-center justify-center rounded-2xl bg-muted">
+                    <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </motion.div>
+            </div>
+
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">รหัสเปลี่ยนในอีก</span>
+                <span className="font-mono font-bold text-primary">{(remaining / 1000).toFixed(1)} วิ</span>
               </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-2.5 rounded-full bg-primary transition-[width] duration-200 ease-linear"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                รหัสเปลี่ยนทุก 15 วินาที · ใช้ได้ครั้งเดียว ป้องกันการส่งต่อให้คนอื่น
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="mt-4 text-center">
+            <div className="flex justify-center">
+              <div className="w-full max-w-sm">
+                {staticQrUrl ? (
+                  <img src={staticQrUrl} alt="Static Shop QR" className="w-full rounded-2xl border" />
+                ) : (
+                  <div className="flex aspect-square w-full items-center justify-center rounded-2xl bg-muted">
+                    <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              สามารถแคปหน้าจอหรือดาวน์โหลด QR นี้พิมพ์ติดหน้าร้าน หรือตั้งไว้ที่โต๊ะได้ถาวร
+            </p>
+            {staticQrUrl && (
+              <a
+                href={staticQrUrl}
+                download={`shop-qr-${merchant.id.slice(0, 6)}.png`}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow"
+              >
+                📥 ดาวน์โหลดรูป QR
+              </a>
             )}
-          </motion.div>
-        </div>
-
-        <div className="mt-4">
-          <div className="mb-1.5 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">รหัสเปลี่ยนในอีก</span>
-            <span className="font-mono font-bold text-primary">{(remaining / 1000).toFixed(1)} วิ</span>
           </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-2.5 rounded-full bg-primary transition-[width] duration-200 ease-linear"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            รหัสเปลี่ยนทุก 15 วินาที · ใช้ได้ครั้งเดียว แชร์ให้เพื่อนสแกนแทนไม่ได้
-          </p>
-        </div>
+        )}
       </div>
     </div>
   );

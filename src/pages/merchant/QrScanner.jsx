@@ -178,7 +178,18 @@ export default function QrScanner() {
 
   return (
     <div>
-      <PageHeader title="สแกน QR / ตรวจสิทธิ์" subtitle="สแกนคูปองลูกค้า กรอกยอดบิลจริง แล้วระบบจะตัดค่าคอมมิชชันจากกระเป๋าเงินอัตโนมัติ" />
+      <PageHeader
+        title="สแกนเนอร์ตัดบิลคูปอง"
+        subtitle="สแกนคูปองลูกค้า กรอกยอดบิลจริง แล้วระบบจะตัดค่าคอมมิชชันจากกระเป๋าเงินอัตโนมัติ"
+        action={
+          <Link
+            to="/merchant/live-qr"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow hover:bg-primary/90"
+          >
+            📱 เปิดจอ QR เช็คอินหน้าร้าน →
+          </Link>
+        }
+      />
 
       <div className="mx-auto max-w-md">
         {/* Wallet status chip */}

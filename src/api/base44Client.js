@@ -192,6 +192,22 @@ const functionsAdapter = {
       const { redeemCouponWithBillDirect } = await import('@/lib/couponRedemption');
       return redeemCouponWithBillDirect(payload);
     }
+    if (functionName === 'generateLiveQrToken') {
+      try {
+        const { data, error } = await supabase.functions.invoke(functionName, { body: payload });
+        if (data && !error) return { data, ...data };
+      } catch {}
+      const { generateLiveQrTokenDirect } = await import('@/lib/liveQrClient');
+      return generateLiveQrTokenDirect(payload);
+    }
+    if (functionName === 'secureCheckIn') {
+      try {
+        const { data, error } = await supabase.functions.invoke(functionName, { body: payload });
+        if (data && !error) return { data, ...data };
+      } catch {}
+      const { secureCheckInDirect } = await import('@/lib/liveQrClient');
+      return secureCheckInDirect(payload);
+    }
     const { data, error } = await supabase.functions.invoke(functionName, { body: payload });
     if (error) {
       console.warn(`[Supabase Function] ${functionName} error:`, error);

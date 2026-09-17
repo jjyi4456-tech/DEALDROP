@@ -22,10 +22,11 @@ export const NAV = {
     color: "from-emerald-500 to-teal-500",
     items: [
       { to: "/merchant", label: "หน้าหลักร้าน", icon: LayoutDashboard, end: true },
+      { to: "/merchant/live-qr", label: "📱 จอ QR เช็คอินหน้าร้าน", icon: QrCode },
       { to: "/merchant/orders", label: "🛎️ ออเดอร์ในครัว", icon: BellRing },
       { to: "/merchant/menu", label: "📋 จัดการเมนูอาหาร", icon: Utensils },
       { to: "/merchant/quests", label: "จัดการภารกิจ", icon: Target },
-      { to: "/merchant/scanner", label: "สแกนเนอร์หน้าร้าน", icon: QrCode },
+      { to: "/merchant/scanner", label: "สแกนเนอร์ตัดบิลคูปอง", icon: QrCode },
       { to: "/merchant/influencers", label: "สถิติ Micro-Influencer", icon: Share2 },
       { to: "/merchant/finance", label: "ศูนย์การเงินและแพ็กเกจ", icon: Wallet },
       { to: "/merchant/profile", label: "หน้าร้านดิจิทัล", icon: Store },

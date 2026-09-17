@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Utensils, BellRing, Plus, Flame } from "lucide-react";
+import { Utensils, BellRing, Plus, Flame, QrCode } from "lucide-react";
 import QuickRescueModal from "@/components/merchant/QuickRescueModal";
 
 const ACTIONS = [
+  {
+    to: "/merchant/live-qr",
+    icon: QrCode,
+    plus: false,
+    title: "📱 จอ QR เช็คอินหน้าร้าน",
+    desc: "เปิดจอ QR ให้ลูกค้าสแกนเช็คอินที่เคาน์เตอร์",
+    accent: "bg-blue-600",
+  },
   {
     to: "/merchant/menu",
     icon: Utensils,
