@@ -59,6 +59,14 @@ export default function QuestBuilder() {
 
   const submit = async () => {
     if (!form.title) { toast({ title: "กรุณาตั้งชื่อภารกิจ", variant: "destructive" }); return; }
+    if (myMerchant && myMerchant.status !== "approved") {
+      toast({
+        title: "ร้านค้าของคุณยังไม่ได้รับการอนุมัติ",
+        description: "กรุณารอแอดมินตรวจสอบและอนุมัติร้านค้าก่อนเริ่มสร้างภารกิจ",
+        variant: "destructive",
+      });
+      return;
+    }
     await base44.entities.Quest.create({
       merchant_id: myMerchant?.id || "m_grow1", merchant_name: myMerchant?.name || "ร้านก๋วยเตี๋ยวเจ้าดัง",
       title: form.title,

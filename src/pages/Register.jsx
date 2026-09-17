@@ -35,7 +35,7 @@ export default function Register() {
     new URLSearchParams(window.location.search).get("role") === "merchant" ? "merchant" : "user"
   ); // user | merchant
   const [showShopForm, setShowShopForm] = useState(false);
-  const [shop, setShop] = useState({ name: "", category: "cafe", phone: "" });
+  const [shop, setShop] = useState({ name: "", category: "cafe", phone: "", address: "", owner_name: "" });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
 
@@ -45,14 +45,43 @@ export default function Register() {
     e.preventDefault();
     setError("");
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("รหัสผ่านไม่ตรงกัน (Passwords do not match)");
       return;
     }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
-      setShowOtp(true);
+      // Register account in Supabase
+      const regResult = await base44.auth.register({ email, password, role: isMerchant ? "pending_merchant" : "user" });
+      
+      // Auto sign-in if session was not automatically established
+      let currentSession = base44.supabase?.auth?.getUser?.();
+      if (!currentSession) {
+        try {
+          await base44.auth.loginViaEmailPassword(email, password);
+        } catch (loginErr) {
+          console.warn("Auto-login note:", loginErr);
+        }
+      }
+
+      if (isMerchant) {
+        // If merchant mode, immediately proceed to the merchant application form
+        setShowShopForm(true);
+      } else {
+        // Consumer registration flow
+        window.location.href = safeReturnTo();
+      }
     } catch (err) {
+      // If user already registered, try logging in to allow them to continue their merchant application
+      if (isMerchant && (err?.message?.includes("already registered") || err?.message?.includes("User already registered"))) {
+        try {
+          await base44.auth.loginViaEmailPassword(email, password);
+          setShowShopForm(true);
+          return;
+        } catch (loginErr) {
+          setError("อีเมลนี้ถูกลงทะเบียนแล้ว กรุณาเข้าสู่ระบบหรือใช้รหัสผ่านที่ถูกต้อง");
+          return;
+        }
+      }
       setError(err.message || "Registration failed");
     } finally {
       setLoading(false);
@@ -92,9 +121,19 @@ export default function Register() {
     base44.auth.loginWithProvider("google", safeReturnTo());
   };
 
-  const submitShop = async () => {
+  const submitShop = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setError("");
     if (!shop.name.trim()) {
-      setError("กรุณากรอกชื่อร้าน");
+      setError("กรุณากรอกชื่อร้านค้า");
+      return;
+    }
+    if (!shop.owner_name.trim()) {
+      setError("กรุณากรอกชื่อ-นามสกุลเจ้าของร้าน");
+      return;
+    }
+    if (!shop.address.trim()) {
+      setError("กรุณากรอกที่ตั้ง/ที่อยู่ของร้าน");
       return;
     }
     if (!termsAccepted) {
@@ -104,47 +143,62 @@ export default function Register() {
     setLoading(true);
     try {
       await base44.functions.invoke("applyMerchant", {
-        name: shop.name,
+        name: shop.name.trim(),
+        owner_name: shop.owner_name.trim(),
         category: shop.category,
-        phone: shop.phone,
+        phone: shop.phone.trim(),
+        address: shop.address.trim(),
       });
-      toast({ title: "ส่งคำขอพาร์ทเนอร์แล้ว", description: "กรุณารอการอนุมัติจากผู้ดูแลระบบ" });
+      toast({ title: "ส่งใบสมัครพาร์ทเนอร์แล้ว 🎉", description: "ระบบกำลังส่งข้อมูลให้แอดมินตรวจสอบ" });
       window.location.href = "/pending-approval";
     } catch (err) {
-      setError(err?.response?.data?.error || err?.data?.error || err?.message || "ส่งคำขอไม่สำเร็จ");
+      setError(err?.response?.data?.error || err?.data?.error || err?.message || "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 3 (merchant): shop info form
+  // Step 2 (merchant): Complete shop application form
   if (showShopForm) {
     return (
-      <AuthLayout icon={Store} title="ข้อมูลร้านค้า" subtitle="กรอกข้อมูลร้านเพื่อขออนุมัติเป็นพาร์ทเนอร์">
+      <AuthLayout icon={Store} title="ข้อมูลใบสมัครร้านค้าพาร์ทเนอร์" subtitle="กรอกข้อมูลร้านค้าให้ครบถ้วนเพื่อส่งให้แอดมินตรวจสอบ">
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm leading-relaxed">{error}</div>
         )}
-        <div className="space-y-4">
+        <form onSubmit={submitShop} className="space-y-4">
           <div className="space-y-2">
-            <Label>ชื่อร้าน</Label>
+            <Label className="text-sm font-semibold">ชื่อร้านค้า <span className="text-destructive">*</span></Label>
             <Input
               value={shop.name}
               onChange={(e) => setShop({ ...shop, name: e.target.value })}
-              placeholder="ชื่อร้านอาหาร/คาเฟ่"
-              className="h-12"
+              placeholder="เช่น ข้าวแกงป้าพร, Roast Coffee & Bakery"
+              className="h-11"
+              required
             />
           </div>
+
           <div className="space-y-2">
-            <Label>หมวดหมู่</Label>
+            <Label className="text-sm font-semibold">ชื่อ-นามสกุล เจ้าของร้าน / ผู้มีอำนาจ <span className="text-destructive">*</span></Label>
+            <Input
+              value={shop.owner_name}
+              onChange={(e) => setShop({ ...shop, owner_name: e.target.value })}
+              placeholder="เช่น นายสมชาย ใจดี"
+              className="h-11"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">หมวดหมู่ร้านค้า <span className="text-destructive">*</span></Label>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
                 <button
                   key={c.value}
                   type="button"
                   onClick={() => setShop({ ...shop, category: c.value })}
-                  className={`rounded-xl px-3 py-1.5 text-sm font-medium transition ${
+                  className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
                     shop.category === c.value
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm"
                       : "bg-muted text-muted-foreground hover:bg-muted/70"
                   }`}
                 >
@@ -153,52 +207,79 @@ export default function Register() {
               ))}
             </div>
           </div>
+
           <div className="space-y-2">
-            <Label>เบอร์โทรร้าน (ไม่บังคับ)</Label>
+            <Label className="text-sm font-semibold">เบอร์โทรศัพท์ติดต่อร้าน / แคชเชียร์ <span className="text-destructive">*</span></Label>
             <Input
               value={shop.phone}
               onChange={(e) => setShop({ ...shop, phone: e.target.value })}
-              className="h-12"
+              placeholder="08X-XXX-XXXX"
+              className="h-11"
+              required
             />
           </div>
-          {/* Partner Agreement consent (PDPA / commission terms) */}
-          <div className={`rounded-xl border p-3 ${termsAccepted ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">ที่ตั้งร้าน / โซนรอบมหาวิทยาลัย <span className="text-destructive">*</span></Label>
+            <Input
+              value={shop.address}
+              onChange={(e) => setShop({ ...shop, address: e.target.value })}
+              placeholder="เช่น ประตู 1 ม.เกษตรฯ ซอยงามวงศ์วาน 54"
+              className="h-11"
+              required
+            />
+          </div>
+
+          {/* Partner Agreement consent (PDPA & commission terms) */}
+          <div className={`rounded-xl border p-3.5 transition ${termsAccepted ? "border-emerald-300 bg-emerald-50/80" : "border-amber-300 bg-amber-50/80"}`}>
             <div className="flex items-start justify-between gap-2">
-              <p className={`text-xs font-medium ${termsAccepted ? "text-emerald-700" : "text-amber-800"}`}>
-                {termsAccepted ? (
-                  <span className="flex items-center gap-1.5">
-                    <FileCheck2 className="h-4 w-4" /> ยอมรับข้อตกลงพาร์ทเนอร์แล้ว (เวอร์ชัน {MERCHANT_TERMS_VERSION})
-                  </span>
-                ) : (
-                  "ต้องอ่านและยอมรับข้อตกลงค่าคอมมิชชันและรอบการชำระเงินก่อนส่งคำขอ"
-                )}
-              </p>
+              <div className="space-y-1">
+                <p className={`text-xs font-bold ${termsAccepted ? "text-emerald-800" : "text-amber-900"}`}>
+                  {termsAccepted ? (
+                    <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+                      <FileCheck2 className="h-4 w-4 text-emerald-600" /> ยอมรับสัญญาพาร์ทเนอร์และเงื่อนไขค่าคอมมิชชันแล้ว (ฉบับ {MERCHANT_TERMS_VERSION})
+                    </span>
+                  ) : (
+                    "⚠️ ต้องอ่านและยอมรับข้อตกลงพาร์ทเนอร์ก่อนส่งใบสมัคร"
+                  )}
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  อัตราคอมมิชชัน Starter 6% · รอบโอนเงินสุทธิ 3-5 วันทำการหลังปิดรอบ
+                </p>
+              </div>
             </div>
             {!termsAccepted && (
               <button
                 type="button"
                 onClick={() => setTermsOpen(true)}
-                className="mt-2 w-full rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground hover:bg-primary/90"
+                className="mt-2.5 w-full rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/90 transition"
               >
-                เปิดข้อตกลงพาร์ทเนอร์
+                📜 กดเพื่ออ่านและยอมรับข้อตกลงพาร์ทเนอร์
               </button>
             )}
           </div>
+
           <MerchantTermsModal
             open={termsOpen}
             onOpenChange={setTermsOpen}
+            merchantName={shop.name}
             onAccepted={() => setTermsAccepted(true)}
           />
-          <Button onClick={submitShop} className="w-full h-12 font-medium" disabled={loading}>
+
+          <Button type="submit" className="w-full h-12 text-sm font-bold" disabled={loading}>
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> กำลังส่งคำขอ...
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> กำลังส่งใบสมัคร...
               </>
             ) : (
-              "ส่งคำขอพาร์ทเนอร์"
+              "ส่งใบสมัครและรอการอนุมัติ 🚀"
             )}
           </Button>
-        </div>
+
+          <p className="text-center text-xs text-muted-foreground">
+            เมื่อส่งใบสมัครแล้ว เจ้าหน้าที่จะตรวจสอบและอนุมัติร้านค้าของคุณเพื่อเริ่มสร้างภารกิจ
+          </p>
+        </form>
       </AuthLayout>
     );
   }

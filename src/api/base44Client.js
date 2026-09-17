@@ -208,6 +208,10 @@ const functionsAdapter = {
       const { secureCheckInDirect } = await import('@/lib/liveQrClient');
       return secureCheckInDirect(payload);
     }
+    if (functionName === 'applyMerchant') {
+      const { applyMerchantDirect } = await import('@/lib/merchantApplication');
+      return applyMerchantDirect(payload);
+    }
     const { data, error } = await supabase.functions.invoke(functionName, { body: payload });
     if (error) {
       console.warn(`[Supabase Function] ${functionName} error:`, error);
