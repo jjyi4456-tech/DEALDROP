@@ -29,19 +29,36 @@ export default function MerchantProfile() {
   const [saving, setSaving] = useState(false);
   const [pinning, setPinning] = useState(false);
   const [editName, setEditName] = useState(false);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const list = await base44.entities.Merchant.list();
-    const m = list[0] || null;
-    setMerchant(m);
-    setForm(m ? { ...m } : { name: "", category: "cafe", description: "", open_time: "08:00", close_time: "20:00", address: "", logo_url: "", cover_url: "" });
+    setLoading(true);
+    try {
+      const me = await base44.auth.me().catch(() => null);
+      let m = null;
+      if (me?.id) {
+        const mine = await base44.entities.Merchant.filter({ created_by_id: me.id }, "-created_date", 1).catch(() => []);
+        m = mine[0] || null;
+      }
+      if (!m) {
+        const list = await base44.entities.Merchant.list().catch(() => []);
+        m = list[0] || null;
+      }
+      setMerchant(m);
+      setForm(m ? { ...m } : { name: "", category: "cafe", description: "", open_time: "08:00", close_time: "20:00", address: "", logo_url: "", cover_url: "" });
+    } catch (err) {
+      console.error("[MerchantProfile] Load error:", err);
+      setMerchant(null);
+      setForm({ name: "", category: "cafe", description: "", open_time: "08:00", close_time: "20:00", address: "", logo_url: "", cover_url: "" });
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => {
     load();
   }, []);
 
-  if (!form) {
+  if (loading || !form) {
     return (
       <div className="flex justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
